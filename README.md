@@ -1,14 +1,13 @@
 # Project goals
 
-Communication between Python and Arduino for a **gesture controlled robot arm!** Arduino is responsible for controlling the servos and depth data (ultrassonic sensor), and python identifies hand positions and send them to arduino (mediapipe, opencv).
+Communication between Python and Arduino for a **gesture controlled robot arm!** Arduino is responsible for controlling the servos, and python identifies hand positions and send them to arduino (mediapipe, opencv).
 
 
 # Current Status
 
-So far, you can use the input in Python to control the angle of 2 servos (considering 180° range of motion). One corresponds to  *'x'* axis and the other to *'y'* axis position of the tip of your index finger in your hand. Servos's controls are connected to pin 9 and pin 10.
+So far, you can use the input in Python to control the angle of 3 servos (considering 180° range of motion). One corresponds to  *'x'* axis and other to *'y'* axis position of the tip of your index finger in your hand. 3rd axis is controled by "depth" data, which considers the distance between the tip of your index and the base of your wrist (landmarks 0 and 8 from mediapipe), so the distance "reduces" when your hand is farther (it doesn't actually reduces, but occupies less pixels). Servos's controls are connected to pin 9, 10 and 11 (x, y and z axis respectively).
 
 Coding is still in progress. I intend to use, in the future, an xbox 360 kinect (1414) for capturing image and depth, but I couldn't manage to gather data from kinect so far (can't use pykinect, libfreenect, etc).
-
 
 
 ## How to use it
@@ -28,7 +27,7 @@ Install mediapipe, opencv-python and pyserial libraries. Python version 3.10.0 w
 First of all, you have to check the COM port in python code, as well as the baud rate. Both should match Arduino's values. By default, the baud rate is 9600 in Python and Arduino.
 > arduinoData = serial.Serial('COM7', 9600)
 
- Inside the code, you can change the "anguloX, anguloY" values based on your camera resolution. The funcion "ajustar_angulo" defines the value of minimum and maximum positions where you can control the servos. For example, I'm using a resolution of 640x480, so I'm starting the hand-control of the servo at the value of 100 and ending it at 500 for the *'x'* axis. If I wanted a smaller range, I could change these values.
+ Inside the code, you can change the "anguloX, anguloY, anguloZ" values based on your camera resolution. The funcion "ajustar_angulo" defines the value of minimum and maximum positions where you can control the servos. For example, I'm using a resolution of 640x480, so I'm starting the hand-control of the servo at the value of 200 and ending it at 400 for the *'x'* axis. If I wanted a different range, I could change these values.
 
 > anguloX = str(ajustar_angulo(x1, 100, 500))
 
