@@ -5,11 +5,11 @@ import serial
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 detector = HandDetector(detectionCon=0.5)
-arduinoData = serial.Serial('COM7', 9600)
+arduinoData = serial.Serial('COM7', 9600, timeout=1)  # Select the corresponding COM port
 sleep(2)
-angulo = 0
 
 
+# Function that translates pixel positions into degrees for servo control
 def ajustar_angulo(position, startpoint, endpoint):
     if position < startpoint:
         position = startpoint
@@ -24,13 +24,21 @@ while True:
     success, img = cap.read()
     img = cv2.flip(img, 1)
     hands, img = detector.findHands(img=img, draw=True)
+
     if hands:
         hand1 = hands[0]
         lmList1 = hand1['lmList']
+
+        # calculates depth based on distance between index tip and wrist
         x1, y1 = lmList1[8][0], lmList1[8][1]
-        anguloX = str(ajustar_angulo(x1, 100, 500))
-        anguloY = str(ajustar_angulo(y1, 70, 200))
-        print(anguloX, anguloY)
+        zx, zy = lmList1[0][0], lmList1[0][1]
+        z1 = ((zx - x1)**2 + (zy - y1)**2)**0.5
+
+        anguloX = str(ajustar_angulo(x1, 200, 400))
+        anguloY = str(ajustar_angulo(y1, 70, 180))
+        anguloZ = str(ajustar_angulo(z1, 180, 300))
+
+        # Transforms each axis angle into a 3 digits code. Put them all together to form a 9 digits code
         try:
             if int(anguloX) < 10:
                 codigoX = "00" + anguloX
@@ -44,8 +52,15 @@ while True:
                 codigoY = "0" + anguloY
             elif 181 > int(anguloY) > 99:
                 codigoY = anguloY
-            codigoTotal = "$" + codigoX + codigoY + "\r"
+            if int(anguloZ) < 9:
+                codigoZ = "00" + str(anguloZ)
+            elif 100 > int(anguloZ) > 9:
+                codigoZ = "0" + str(anguloZ)
+            else:
+                codigoZ = str(anguloZ)
+            codigoTotal = "$" + codigoX + codigoY + codigoZ + "\r"
             arduinoData.write(codigoTotal.encode())
+            print(codigoTotal)
             sleep(0.01)
 
         except Exception as e:
@@ -55,7 +70,7 @@ while True:
 
     # Keep the window open and update it for each frame; wait for 1 millisecond between frames
     key = cv2.waitKey(1)
-    if key == ord('q') or key == 27:
+    if key == ord('q') or key == 27:  # Press "q" or "esc" to close the window
         break
 
 cap.release()
